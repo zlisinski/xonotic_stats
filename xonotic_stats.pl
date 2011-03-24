@@ -9,14 +9,17 @@ use Getopt::Long qw(:config gnu_getopt require_order no_auto_abbrev);
 
 # Function prototypes
 sub main();
-sub parseArgs();
 sub processLine($);
-sub getStatHash();
-sub output();
-sub outputPlayerStats();
-sub calcAggregateData();
+sub logPlayerKill($$$);
+sub logWeaponSuicide($$);
 sub initPlayer($);
+sub output();
+sub outputStatsByPlayer(); 
+sub outputPlayerStats();
+sub getStatHash();
+sub calcAggregateData();
 sub getName($;$);
+sub parseArgs();
 sub slurpFile($);
 sub usage(;$);
 
@@ -125,38 +128,7 @@ sub processLine($) {
 		#uzi: %s was riddled full of holes by %s
 		($line =~ /\^1(.+?)\^1 was .+ by ([^']+)/ && $line !~ /spree/)
 	) {
-		my $victim = getName($1);
-		my $killer = getName($2);
-
-		# record total kills and deaths
-		$players{$killer}{'totalKills'}++;
-		$players{$killer}{'tempHighestKills'}++;
-		$players{$victim}{'totalDeaths'}++;
-
-		# bot kills bot
-		if ($killer =~ /\[BOT\]/ && $victim =~ /\[BOT\]/) {
-			$players{$killer}{'botKills'}++;
-			$players{$victim}{'botDeaths'}++;
-		}
-		# bot kills player
-		elsif ($killer =~ /\[BOT\]/ && $victim !~ /\[BOT\]/) {
-			$players{$killer}{'nonbotKills'}++;
-			$players{$victim}{'botDeaths'}++;
-		}
-		# player kills bot
-		elsif ($killer !~ /\[BOT\]/ && $victim =~ /\[BOT\]/) {
-			$players{$killer}{'botKills'}++;
-			$players{$victim}{'nonbotDeaths'}++;
-		}
-		# player kills player
-		elsif ($killer !~ /\[BOT\]/ && $victim !~ /\[BOT\]/) {
-			$players{$killer}{'nonbotKills'}++;
-			$players{$victim}{'nonbotDeaths'}++;
-		}
-
-		# record kills/deaths per killer/victim
-		$players{$killer}{'playersKilled'}{$victim}++;
-		$players{$victim}{'killedByPlayers'}{$killer}++;
+		logPlayerKill($1, $2, 'weaponName');
 	}
 	# log weapon suicides
 	elsif (
@@ -179,8 +151,7 @@ sub processLine($) {
 		$line =~ /\^1(.+?)\^1 unfairly eliminated himself/ ||
 		$line =~ /\^1(.+?)\^1 will be reinserted into the game due to his own actions/ 
 	) {
-		my $player = getName($1);
-		$players{$player}{'weaponSuicides'}++;
+		logWeaponSuicide($1, 'weaponName');
 	}
 	# log other deaths.  Most of these are defined inside custom maps
 	elsif (
@@ -286,8 +257,74 @@ sub processLine($) {
 		}
 		$players{$player}{'tempHighestKills'} = 0;
 	}
+	# log weapon assignments
+	elsif ($line =~ /^\^7(.+?)\^7 was assigned the \^3(.+?)$/) {
+#\^1(.+?)\^1 almost dodged ([^']+)
+		my $player = getName($1);
+		$players{$player}{'weaponAssignments'}{$2}++;
+	}
 }
 
+
+###############################################################################
+# Logs a player kill
+# Param $victim: Name of the victim
+# Param $killer: Name of the killer
+# Param $weapon: Name of weapon used for kill
+# Returns: Nothing
+###############################################################################
+sub logPlayerKill($$$) {
+	my $victim = getName(shift);
+	my $killer = getName(shift);
+	my $weapon = getName(shift, 0);
+
+	# record total kills and deaths
+	$players{$killer}{'totalKills'}++;
+	$players{$killer}{'tempHighestKills'}++;
+	$players{$victim}{'totalDeaths'}++;
+
+	# bot kills bot
+	if ($killer =~ /\[BOT\]/ && $victim =~ /\[BOT\]/) {
+		$players{$killer}{'botKills'}++;
+		$players{$victim}{'botDeaths'}++;
+	}
+	# bot kills player
+	elsif ($killer =~ /\[BOT\]/ && $victim !~ /\[BOT\]/) {
+		$players{$killer}{'nonbotKills'}++;
+		$players{$victim}{'botDeaths'}++;
+	}
+	# player kills bot
+	elsif ($killer !~ /\[BOT\]/ && $victim =~ /\[BOT\]/) {
+		$players{$killer}{'botKills'}++;
+		$players{$victim}{'nonbotDeaths'}++;
+	}
+	# player kills player
+	elsif ($killer !~ /\[BOT\]/ && $victim !~ /\[BOT\]/) {
+		$players{$killer}{'nonbotKills'}++;
+		$players{$victim}{'nonbotDeaths'}++;
+	}
+
+	# record kills/deaths per killer/victim
+	$players{$killer}{'playersKilled'}{$victim}++;
+	$players{$victim}{'killedByPlayers'}{$killer}++;
+	$players{$killer}{'weaponKills'}{$weapon}++;
+	$players{$victim}{'weaponDeaths'}{$weapon}++;
+}
+
+
+###############################################################################
+# Logs a player suicide
+# Param $victim: Name of the player
+# Param $weapon: Name of weapon used for kill
+# Returns: Nothing
+###############################################################################
+sub logWeaponSuicide($$) {
+	my $player = getName(shift);
+	my $weapon = getName(shift, 0);
+
+	$players{$player}{'allWeaponSuicides'}++;
+	$players{$player}{'weaponSuicides'}{$weapon}++;
+}
 
 ###############################################################################
 # Initializes player hash if not defined
@@ -314,7 +351,7 @@ sub initPlayer($) {
 			'tempHighestKills'=>0,
 			'teammateKills'=>0,
 			'firstKills'=>0,
-			'weaponSuicides'=>0,
+			'allWeaponSuicides'=>0,
 			'otherSuicides'=>0,
 			'gamesPlayed'=>0,
 			'keyPickups'=>0,
@@ -324,7 +361,11 @@ sub initPlayer($) {
 			'totalWins'=>0,
 			'WinPercent'=>0,
 			'playersKilled'=>{},
-			'killedByPlayers'=>{}
+			'killedByPlayers'=>{},
+			'weaponAssignments'=>{},
+			'weaponKills'=>{},
+			'weaponDeaths'=>{},
+			'weaponSuicides'=>{}
 		};
 	}
 }
@@ -430,7 +471,7 @@ sub outputPlayerStats() {
 		my $highestKills = $playerData{'highestKills'};
 		my $teamKills = $playerData{'teammateKills'};
 		my $firstKills = $playerData{'firstKills'};
-		my $weaponSuicides = $playerData{'weaponSuicides'};
+		my $allWeaponSuicides = $playerData{'allWeaponSuicides'};
 		my $otherSuicides = $playerData{'otherSuicides'};
 		my $keyPickups = $playerData{'keyPickups'};
 		my $keyLosses = $playerData{'keyLosses'};
@@ -451,6 +492,27 @@ sub outputPlayerStats() {
 		foreach my $otherPlayerName (sort keys %{$playerData{'killedByPlayers'}}) {
 			my $botFlag = $otherPlayerName =~ /\[BOT\]/ ? ' class="PTypeBot"' : '';
 			$playerDeaths .= "$tabs<tr$botFlag><th><a href='#PlayerStats_$otherPlayerName'>$otherPlayerName</a></th><td>$playerData{'killedByPlayers'}{$otherPlayerName}</td></tr>\n";
+		}
+
+		my $weaponAssignments = '';
+		foreach my $weaponName (sort keys %{$playerData{'weaponAssignments'}}) {
+			$weaponAssignments .= "$tabs<tr><th>$weaponName</th><td>$playerData{'weaponAssignments'}{$weaponName}</td></tr>\n";
+		}
+
+		my $weaponKills = '';
+		foreach my $weaponName (sort keys %{$playerData{'weaponKills'}}) {
+			$weaponKills .= "$tabs<tr><th>$weaponName</th><td>$playerData{'weaponKills'}{$weaponName}</td></tr>\n";
+		}
+
+		my $weaponDeaths = '';
+		foreach my $weaponName (sort keys %{$playerData{'weaponDeaths'}}) {
+			$weaponDeaths .= "$tabs<tr><th>$weaponName</th><td>$playerData{'weaponDeaths'}{$weaponName}</td></tr>\n";
+		}
+
+		my $weaponSuicides = '';
+		foreach my $weaponName (sort keys %{$playerData{'weaponSuicides'}}) {
+			print $weaponName."\n";
+			$weaponSuicides .= "$tabs<tr><th>$weaponName</th><td>$playerData{'weaponSuicides'}{$weaponName}</td></tr>\n";
 		}
 
 		$playerStats .= eval qq/"$playerStatTemplate"/;
@@ -479,7 +541,7 @@ sub getStatHash() {
 		{title=>'Highest Kills',    value=>'highestKills'},
 		{title=>'Team Kills',       value=>'teammateKills'},
 		{title=>'First Kills',      value=>'firstKills'},
-		{title=>'Weapon Suicides',  value=>'weaponSuicides'},
+		{title=>'Weapon Suicides',  value=>'allWeaponSuicides'},
 		{title=>'Other Suicides',   value=>'otherSuicides'},
 		{title=>'Key Pickups',      value=>'keyPickups'},
 		{title=>'Key Losses',       value=>'keyLosses'},
