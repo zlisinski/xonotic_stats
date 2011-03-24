@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Xonotic Stats</title>
+	<link rel="stylesheet" type="text/css" href="stats.css" />
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript">
+	//<![CDATA[
+		$(document).ready(function() {
+			$('tr[class^=Row]').mouseover(function() {
+				$(this).addClass('RowHighlight');
+			});
+			$('tr[class^=Row]').mouseout(function() {
+				$(this).removeClass('RowHighlight');
+			});
+			$('td[class^=Col]').mouseover(function() {
+				var colClass = this.className.match(/Col\d+/);
+				$('td[class*="'+colClass+'"]').addClass('CellHighlight');
+			});
+			$('td[class^=Col]').mouseout(function() {
+				var colClass = this.className.match(/Col\d+/);
+				$('td[class*="'+colClass+'"]').removeClass('CellHighlight');
+			});
+			$('.PlayerDiv tr').mouseover(function() {
+				$(this).addClass('Highlight');
+			});
+			$('.PlayerDiv tr').mouseout(function() {
+				$(this).removeClass('Highlight');
+			});
+		});
+
+		function ShowHideBotStats() {
+			var link = $('#ShowHideBotLink');
+
+			if (link.html() == 'Hide Bots') {
+				link.html('Show Bots');
+				$('.PTypeBot').hide();
+			}
+			else {
+				link.html('Hide Bots');
+				$('.PTypeBot').show();
+			}
+		}
+	//]]>
+	</script>
+</head>
+<body id='TopOfPage'>
+
+<div id='ShowHideBotDiv'>
+	<a id='ShowHideBotLink' href='#' onclick='ShowHideBotStats(); return false;'>Show Bots</a>
+</div>
+
+<div class='TotalStatsDiv'>
+#total_stat_table#
+</div>
+
+<div class=''>
+#player_stats#
+</div>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+body {
+	font-size: 12px;
+	font-family: arial, sans-serif;
+}
+
+a:link,
+a:visited {
+	color: #000000;
+}
+a:active,
+a:hover {
+	color: #FF0000;
+}
+
+#ShowHideBotDiv {
+	padding-bottom: 10px;
+}
+
+.PTypeBot {
+	display: none;
+}
+
+.TotalStatsDiv {
+	margin-bottom: 10px;
+}
+.TotalStatsDiv table {
+	margin: 0px auto;
+	border: 3px solid #999999;
+	border-collapse: collapse;
+	background-color: #CFE0CF;
+}
+.TotalStatsDiv table .RowHighlight {
+	background-color: #DDF8DD;
+}
+.TotalStatsDiv table .CellHighlight {
+	background-color: #DDF8DD;
+}
+.TotalStatsDiv table .RowHighlight .CellHighlight {
+	background-color: #F8FFF8;
+}
+.TotalStatsDiv td {
+	text-align: center;
+	padding: 2px 5px;
+}
+.TotalStatsDiv td.Title {
+	font-weight: bold;
+}
+
+.PlayerDiv {
+	background-color: #E4E4E4;
+	margin: 10px 5px 0px 5px;
+	padding: 0px 5px;
+	border: 3px solid #999999;
+	clear: both;
+	height: auto;
+}
+.PlayerDiv .PlayerName {
+	font-weight: bold;
+	font-size: 14px;
+	padding: 5px;
+}
+.PlayerDiv table {
+	border: 1px solid #999999;
+	border-collapse: collapse;
+	background-color: #CFE0CF;
+}
+.PlayerDiv fieldset {
+	margin-bottom:5px;
+	padding:5px;
+	background-color:#CFE0CF;
+	float: left;
+}
+.PlayerDiv fieldset legend {
+	font-weight:bold;
+}
+.PlayerDiv fieldset table {
+	border: none;
+}
+.PlayerDiv fieldset tr {
+	padding: 5px;
+}
+.PlayerDiv fieldset th {
+	text-align: left;
+}
+.PlayerDiv fieldset td {
+	text-align: left;
+}
+.PlayerDiv .Highlight {
+	background-color: #DDF8DD;
+}
+
+.FloatLeft {
+	float: left;
+}
+
+.TopOfPageLink {
+	padding-left: 5px;
+}
