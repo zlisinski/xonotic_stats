@@ -63,7 +63,93 @@ sub processLine($) {
 	my $line = shift;
 
 	# log kills/deaths
-	if (
+	# Crylink
+	if ($line =~ /\^1(.+?)\^1 could not hide from ([^']+)'s Crylink/ ||
+        $line =~ /\^1(.+?)\^1 was too close to ([^']+)'s Crylink/ ||
+        $line =~ /\^1(.+?)\^1 took a close look at ([^']+)'s Crylink/) {
+			logPlayerKill($1, $2, 'Crylink');
+	}
+	#Electro
+	elsif ($line =~ /\^1(.+?)\^1 just noticed ([^']+)'s blue ball/ ||
+           $line =~ /\^1(.+?)\^1 got in touch with ([^']+)'s blue ball/ ||
+           $line =~ /\^1(.+?)\^1 felt the electrifying air of ([^']+)'s combo/ ||
+           $line =~ /\^1(.+?)\^1 got too close to ([^']+)'s blue beam/ ||
+           $line =~ /\^1(.+?)\^1 was blasted by ([^']+)'s blue beam/) {
+			logPlayerKill($1, $2, 'Electro');
+	}
+	#Fireball
+	elsif ($line =~ /\^1(.+?)\^1 tried to catch ([^']+)'s firemine/ ||
+           $line =~ /\^1(.+?)\^1 fatefully ignored ([^']+)'s firemine/ ||
+           $line =~ /\^1(.+?)\^1 could not hide from ([^']+)'s fireball/ ||
+           $line =~ /\^1(.+?)\^1 saw the pretty lights of ([^']+)'s fireball/ ||
+           $line =~ /\^1(.+?)\^1 got too close to ([^']+)'s fireball/ ||
+           $line =~ /\^1(.+?)\^1 tasted ([^']+)'s fireball/) {
+			logPlayerKill($1, $2, 'Fireball');
+	}
+	#Mortar
+	elsif ($line =~ /\^1(.+?)\^1 didn't see ([^']+)'s grenade/ ||
+           $line =~ /\^1(.+?)\^1 almost dodged ([^']+)'s grenade/ ||
+           $line =~ /\^1(.+?)\^1 ate ([^']+)'s grenade/) {
+			logPlayerKill($1, $2, 'Mortar');
+	}
+	#Hagar
+	elsif ($line =~ /\^1(.+?)\^1 hoped ([^']+)'s missiles wouldn't bounce/ ||
+           $line =~ /\^1(.+?)\^1 was pummeled by ([^']+)/) {
+			logPlayerKill($1, $2, 'Hagar');
+	}
+	#HLAC
+	elsif ($line =~ /\^1(.+?)\^1 was cut down by ([^']+)/) {
+			logPlayerKill($1, $2, 'Heavy Laser Assault Cannon');
+	}
+	#Hook
+	elsif ($line =~ /\^1(.+?)\^1 has run into ([^']+)'s gravity bomb/) {
+			logPlayerKill($1, $2, 'Grappling Hook');
+	}
+	#Laser
+	elsif ($line =~ /\^1(.+?)\^1 was cut in half by ([^']+)'s gauntlet/ ||
+           $line =~ /\^1(.+?)\^1 was lasered to death by ([^']+)/) {
+			logPlayerKill($1, $2, 'Laser');
+	}
+	#Minelayer
+	elsif ($line =~ /\^1(.+?)\^1 got too close to ([^']+)'s mine/ ||
+           $line =~ /\^1(.+?)\^1 almost dodged ([^']+)'s mine/ ||
+           $line =~ /\^1(.+?)\^1 stepped on ([^']+)'s mine/) {
+			logPlayerKill($1, $2, 'Mine Layer');
+	}
+	#Nex
+	elsif ($line =~ /\^1(.+?)\^1 has been vaporized by ([^']+)/) {
+			logPlayerKill($1, $2, 'Nex');
+	}
+	#Rocketlauncher
+	elsif ($line =~ /\^1(.+?)\^1 got too close to ([^']+)'s rocket/ ||
+           $line =~ /\^1(.+?)\^1 almost dodged ([^']+)'s rocket/ ||
+           $line =~ /\^1(.+?)\^1 ate ([^']+)'s rocket/) {
+			logPlayerKill($1, $2, 'Rocket Launcher');
+	}
+	#tag seeker
+	elsif ($line =~ /\^1(.+?)\^1 ran into ([^']+)'s flac/ ||
+           $line =~ /\^1(.+?)\^1 was tagged by ([^']+)/) {
+			logPlayerKill($1, $2, 'T.A.G. Seeker');
+	}
+	#Shotgun
+	elsif ($line =~ /\^1(.+?)\^1 \^7slapped ([^']+) ^7around a bit with a large ^2shotgun/ ||
+           $line =~ /\^1(.+?)\^1 was gunned by ([^']+)/) {
+			logPlayerKill($1, $2, 'Shotgun');
+	}
+	#Sniper Rifle
+	elsif ($line =~ /\^1(.+?)\^1 failed to hide from ([^']+)'s bullet hail/ ||
+           $line =~ /\^1(.+?)\^1 died in ([^']+)'s bullet hail/ ||
+           $line =~ /\^1(.+?)\^1 failed to hide from ([^']+)'s rifle/ ||
+           $line =~ /\^1(.+?)\^1 got hit in the head by ([^']+)/ ||
+           $line =~ /\^1(.+?)\^1 was sniped by ([^']+)/) {
+			logPlayerKill($1, $2, 'Sniper Rifle');
+	}
+	#Machine Gun
+	elsif ($line =~ /\^1(.+?)\^1 was sniped by ([^']+)/ ||
+           $line =~ /\^1(.+?)\^1 was riddled full of holes by ([^']+)/) {
+			logPlayerKill($1, $2, 'Machine Gun');
+	}
+	elsif (
 		#grenadelauncher: %s almost dodged %s's grenade
 		#minelayer: %s almost dodged %s's mine
 		#rocketlauncher: %s almost dodged %s's rocket
@@ -131,6 +217,26 @@ sub processLine($) {
 		logPlayerKill($1, $2, 'weaponName');
 	}
 	# log weapon suicides
+#	elsif ($line =~ /\^1(.+?)\^1 succeeded at self-destructing themself with the Crylink/ #crylink
+#$line =~ /\^1(.+?)\^1 could not remember where they put plasma/ #electro
+#$line =~ /\^1(.+?)\^1 played with plasma/ #electro
+#$line =~ /\^1(.+?)\^1 forgot about some firemine/ #fireball
+#$line =~ /\^1(.+?)\^1 should have used a smaller gun/ #fireball
+#$line =~ /\^1(.+?)\^1 tried out his own grenade/ #grenade
+#$line =~ /\^1(.+?)\^1 detonated/ #grenade
+#$line =~ /\^1(.+?)\^1 played with tiny rockets/ #hagar
+#$line =~ /\^1(.+?)\^1 should have used a smaller gun/ #hlac
+#$line =~ /\^1(.+?)\^1 did the impossible/ #hook
+#$line =~ /\^1(.+?)\^1 lasered themself to hell/ #laser
+#$line =~ /\^1(.+?)\^1 exploded/ #minelayer
+#$line =~ /\^1(.+?)\^1 did the impossible/ #nex
+#$line =~ /\^1(.+?)\^1 exploded/ # rocket launcher
+#$line =~ /\^1(.+?)\^1 played with tiny rockets/ #tag seeker
+#$line =~ /\^1(.+?)\^1 did the impossible/ #shotgun
+#$line =~ /\^1(.+?)\^1 shot themself automatically/ #sniper
+#$line =~ /\^1(.+?)\^1 sniped themself somehow/ #sniper
+#$line =~ /\^1(.+?)\^1 did the impossible/ #Machine Gun
+#	}
 	elsif (
 		$line =~ /\^1(.+?)\^1 burned to death/ ||
 		$line =~ /\^1(.+?)\^1 could not remember where (?:they|he) put plasma/ || #electro
@@ -151,7 +257,7 @@ sub processLine($) {
 		$line =~ /\^1(.+?)\^1 unfairly eliminated himself/ ||
 		$line =~ /\^1(.+?)\^1 will be reinserted into the game due to his own actions/ 
 	) {
-		logWeaponSuicide($1, 'weaponName');
+		logWeaponSuicide($1, 'NotYetImplemented');
 	}
 	# log other deaths.  Most of these are defined inside custom maps
 	elsif (
