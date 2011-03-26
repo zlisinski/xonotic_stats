@@ -10,7 +10,8 @@ use Getopt::Long qw(:config gnu_getopt require_order no_auto_abbrev);
 # Function prototypes
 sub main();
 sub processLine($);
-sub logPlayerKill($$$);
+sub getWeaponName($$);
+sub logPlayerKill($$$;$);
 sub logWeaponSuicide($$);
 sub initPlayer($);
 sub output();
@@ -63,13 +64,58 @@ sub processLine($) {
 	my $line = shift;
 
 	# log kills/deaths
+	
+	# Telefrag
+	if ($line =~ /\^1(.+?)\^1 tried to occupy ([^']+)^1's teleport destination space/ ||
+		$line =~ /\^1(.+?)\^1 was telefragged by ([^']+)/) {
+			logPlayerKill($1, $2, 'Telefrag', 1);
+	}
+	# Water?
+	elsif ($line =~ /\^1(.+?)\^1 was drowned by ([^']+)/) {
+		logPlayerKill($1, $2, 'Drowning', 1);
+	}
+	# Slime
+	elsif ($line =~ /\^1(.+?)\^1 was slimed by ([^']+)/) {
+		logPlayerKill($1, $2, 'Slime', 1);
+	}
+	# Lava
+	elsif ($line =~ /\^1(.+?)\^1 was cooked by ([^']+)/) {
+		logPlayerKill($1, $2, 'Lava', 1);
+	}
+	# Falling
+	elsif ($line =~ /\^1(.+?)\^1 was grounded by ([^']+)/) {
+		logPlayerKill($1, $2, 'Falling', 1);
+	}
+	# Sky
+	elsif ($line =~ /\^1(.+?)\^1 was shot into space by ([^']+)/) {
+		logPlayerKill($1, $2, 'Sky', 1);
+	}
+	# Generic
+	elsif ($line =~ /\^1(.+?)\^1 was conserved by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was crushed by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 got shredded by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was blasted to bits by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 got caught in the destruction of ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was bolted down by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 could find no shelter from ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was pushed into the line of fire by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was pushed into an accident by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was unfairly eliminated by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was burnt to death by ([^']+)/ ||
+	       $line =~ /\^1(.+?)\^1 was fragged by ([^']+)/) {
+		logPlayerKill($1, $2, 'Generic', 1);
+	}
+	# Hurt
+	elsif ($line =~ /\^1(.+?)\^1 was thrown into a world of hurt by ([^']+)/) {
+		logPlayerKill($1, $2, 'Hurt', 1);
+	}
 	# Crylink
-	if ($line =~ /\^1(.+?)\^1 could not hide from ([^']+)'s Crylink/ ||
+	elsif ($line =~ /\^1(.+?)\^1 could not hide from ([^']+)'s Crylink/ ||
         $line =~ /\^1(.+?)\^1 was too close to ([^']+)'s Crylink/ ||
         $line =~ /\^1(.+?)\^1 took a close look at ([^']+)'s Crylink/) {
 			logPlayerKill($1, $2, 'Crylink');
 	}
-	#Electro
+	# Electro
 	elsif ($line =~ /\^1(.+?)\^1 just noticed ([^']+)'s blue ball/ ||
            $line =~ /\^1(.+?)\^1 got in touch with ([^']+)'s blue ball/ ||
            $line =~ /\^1(.+?)\^1 felt the electrifying air of ([^']+)'s combo/ ||
@@ -77,7 +123,7 @@ sub processLine($) {
            $line =~ /\^1(.+?)\^1 was blasted by ([^']+)'s blue beam/) {
 			logPlayerKill($1, $2, 'Electro');
 	}
-	#Fireball
+	# Fireball
 	elsif ($line =~ /\^1(.+?)\^1 tried to catch ([^']+)'s firemine/ ||
            $line =~ /\^1(.+?)\^1 fatefully ignored ([^']+)'s firemine/ ||
            $line =~ /\^1(.+?)\^1 could not hide from ([^']+)'s fireball/ ||
@@ -86,68 +132,72 @@ sub processLine($) {
            $line =~ /\^1(.+?)\^1 tasted ([^']+)'s fireball/) {
 			logPlayerKill($1, $2, 'Fireball');
 	}
-	#Mortar
-	elsif ($line =~ /\^1(.+?)\^1 didn't see ([^']+)'s grenade/ ||
-           $line =~ /\^1(.+?)\^1 almost dodged ([^']+)'s grenade/ ||
-           $line =~ /\^1(.+?)\^1 ate ([^']+)'s grenade/) {
-			logPlayerKill($1, $2, 'Mortar');
-	}
-	#Hagar
+	# Hagar
 	elsif ($line =~ /\^1(.+?)\^1 hoped ([^']+)'s missiles wouldn't bounce/ ||
            $line =~ /\^1(.+?)\^1 was pummeled by ([^']+)/) {
 			logPlayerKill($1, $2, 'Hagar');
 	}
-	#HLAC
+	# HLAC
 	elsif ($line =~ /\^1(.+?)\^1 was cut down by ([^']+)/) {
-			logPlayerKill($1, $2, 'Heavy Laser Assault Cannon');
+			logPlayerKill($1, $2, 'HLAC');
 	}
-	#Hook
+	# Hook
 	elsif ($line =~ /\^1(.+?)\^1 has run into ([^']+)'s gravity bomb/) {
 			logPlayerKill($1, $2, 'Grappling Hook');
 	}
-	#Laser
+	# Laser
 	elsif ($line =~ /\^1(.+?)\^1 was cut in half by ([^']+)'s gauntlet/ ||
            $line =~ /\^1(.+?)\^1 was lasered to death by ([^']+)/) {
 			logPlayerKill($1, $2, 'Laser');
 	}
-	#Minelayer
+	# Machine Gun
+	elsif ($line =~ /\^1(.+?)\^1 was sniped by ([^']+)/ ||
+           $line =~ /\^1(.+?)\^1 was riddled full of holes by ([^']+)/) {
+			logPlayerKill($1, $2, 'Machine Gun');
+	}
+	# Minelayer
 	elsif ($line =~ /\^1(.+?)\^1 got too close to ([^']+)'s mine/ ||
            $line =~ /\^1(.+?)\^1 almost dodged ([^']+)'s mine/ ||
            $line =~ /\^1(.+?)\^1 stepped on ([^']+)'s mine/) {
 			logPlayerKill($1, $2, 'Mine Layer');
 	}
-	#Nex
+	# Minstanex
+	elsif ($line =~ /\^1(.+?)\^1 has been vaporized by ([^']+)/) {
+			logPlayerKill($1, $2, 'Minstanex');
+	}
+	# Mortar
+	elsif ($line =~ /\^1(.+?)\^1 didn't see ([^']+)'s grenade/ ||
+           $line =~ /\^1(.+?)\^1 almost dodged ([^']+)'s grenade/ ||
+           $line =~ /\^1(.+?)\^1 ate ([^']+)'s grenade/) {
+			logPlayerKill($1, $2, 'Mortar');
+	}
+	# Nex
 	elsif ($line =~ /\^1(.+?)\^1 has been vaporized by ([^']+)/) {
 			logPlayerKill($1, $2, 'Nex');
 	}
-	#Rocketlauncher
+	# Rocketlauncher
 	elsif ($line =~ /\^1(.+?)\^1 got too close to ([^']+)'s rocket/ ||
            $line =~ /\^1(.+?)\^1 almost dodged ([^']+)'s rocket/ ||
            $line =~ /\^1(.+?)\^1 ate ([^']+)'s rocket/) {
 			logPlayerKill($1, $2, 'Rocket Launcher');
 	}
-	#tag seeker
+	# TAG Seeker
 	elsif ($line =~ /\^1(.+?)\^1 ran into ([^']+)'s flac/ ||
            $line =~ /\^1(.+?)\^1 was tagged by ([^']+)/) {
 			logPlayerKill($1, $2, 'T.A.G. Seeker');
 	}
-	#Shotgun
+	# Shotgun
 	elsif ($line =~ /\^1(.+?)\^1 \^7slapped ([^']+) ^7around a bit with a large ^2shotgun/ ||
            $line =~ /\^1(.+?)\^1 was gunned by ([^']+)/) {
 			logPlayerKill($1, $2, 'Shotgun');
 	}
-	#Sniper Rifle
+	# Sniper Rifle
 	elsif ($line =~ /\^1(.+?)\^1 failed to hide from ([^']+)'s bullet hail/ ||
            $line =~ /\^1(.+?)\^1 died in ([^']+)'s bullet hail/ ||
            $line =~ /\^1(.+?)\^1 failed to hide from ([^']+)'s rifle/ ||
            $line =~ /\^1(.+?)\^1 got hit in the head by ([^']+)/ ||
            $line =~ /\^1(.+?)\^1 was sniped by ([^']+)/) {
 			logPlayerKill($1, $2, 'Sniper Rifle');
-	}
-	#Machine Gun
-	elsif ($line =~ /\^1(.+?)\^1 was sniped by ([^']+)/ ||
-           $line =~ /\^1(.+?)\^1 was riddled full of holes by ([^']+)/) {
-			logPlayerKill($1, $2, 'Machine Gun');
 	}
 	elsif (
 		#grenadelauncher: %s almost dodged %s's grenade
@@ -214,6 +264,7 @@ sub processLine($) {
 		#uzi: %s was riddled full of holes by %s
 		($line =~ /\^1(.+?)\^1 was .+ by ([^']+)/ && $line !~ /spree/)
 	) {
+		print "$line";
 		logPlayerKill($1, $2, 'weaponName');
 	}
 	# log weapon suicides
@@ -229,6 +280,7 @@ sub processLine($) {
 #$line =~ /\^1(.+?)\^1 did the impossible/ #hook
 #$line =~ /\^1(.+?)\^1 lasered themself to hell/ #laser
 #$line =~ /\^1(.+?)\^1 exploded/ #minelayer
+#$line =~ /\^1(.+?)\^1 did the impossible/ #minstanex
 #$line =~ /\^1(.+?)\^1 did the impossible/ #nex
 #$line =~ /\^1(.+?)\^1 exploded/ # rocket launcher
 #$line =~ /\^1(.+?)\^1 played with tiny rockets/ #tag seeker
@@ -365,24 +417,49 @@ sub processLine($) {
 	}
 	# log weapon assignments
 	elsif ($line =~ /^\^7(.+?)\^7 was assigned the \^3(.+?)$/) {
-#\^1(.+?)\^1 almost dodged ([^']+)
 		my $player = getName($1);
-		$players{$player}{'weaponAssignments'}{$2}++;
+		my $weaponName = $2;
+		$weaponName =~ s/Heavy Laser Assault Cannon/HLAC/;
+		$players{$player}{'curWeapon'} = $weaponName;
+		$players{$player}{'weaponAssignments'}{$weaponName}++;
 	}
 }
 
+
+###############################################################################
+# Gets weapon name from $players array or passed var
+# Param $player: Name of player
+# Param $defaultWeaponName: Name of weapon used for kill
+# Returns: Weapon name based on current player, or defaultWeaponName
+###############################################################################
+sub getWeaponName($$) {
+	my $player = shift;
+	my $defaultWeaponName = shift;
+	
+	if ($players{$player}{'curWeapon'}) {
+		return $players{$player}{'curWeapon'};
+	}
+	
+	return $defaultWeaponName;
+}
 
 ###############################################################################
 # Logs a player kill
 # Param $victim: Name of the victim
 # Param $killer: Name of the killer
 # Param $weapon: Name of weapon used for kill
+# Param $weaponAsIs: Use weaponName as it is passed in, instead of from $players array
 # Returns: Nothing
 ###############################################################################
-sub logPlayerKill($$$) {
+sub logPlayerKill($$$;$) {
 	my $victim = getName(shift);
 	my $killer = getName(shift);
 	my $weapon = getName(shift, 0);
+	my $weaponNameAsIs = shift || 0;
+	
+	if (!$weaponNameAsIs) {
+		$weapon = getWeaponName($killer, $weapon);
+	}
 
 	# record total kills and deaths
 	$players{$killer}{'totalKills'}++;
@@ -468,6 +545,7 @@ sub initPlayer($) {
 			'WinPercent'=>0,
 			'playersKilled'=>{},
 			'killedByPlayers'=>{},
+			'curWeapon'=>'',
 			'weaponAssignments'=>{},
 			'weaponKills'=>{},
 			'weaponDeaths'=>{},
@@ -617,7 +695,7 @@ sub outputPlayerStats() {
 
 		my $weaponSuicides = '';
 		foreach my $weaponName (sort keys %{$playerData{'weaponSuicides'}}) {
-			print $weaponName."\n";
+			#print $weaponName."\n";
 			$weaponSuicides .= "$tabs<tr><th>$weaponName</th><td>$playerData{'weaponSuicides'}{$weaponName}</td></tr>\n";
 		}
 
