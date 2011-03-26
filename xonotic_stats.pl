@@ -12,7 +12,7 @@ sub main();
 sub processLine($);
 sub getWeaponName($$);
 sub logPlayerKill($$$;$);
-sub logWeaponSuicide($$);
+sub logWeaponSuicide($);
 sub initPlayer($);
 sub output();
 sub outputStatsByPlayer(); 
@@ -265,51 +265,32 @@ sub processLine($) {
 		($line =~ /\^1(.+?)\^1 was .+ by ([^']+)/ && $line !~ /spree/)
 	) {
 		print "$line";
-		logPlayerKill($1, $2, 'weaponName');
+		logPlayerKill($1, $2, 'Unkown Weapon');
 	}
 	# log weapon suicides
-#	elsif ($line =~ /\^1(.+?)\^1 succeeded at self-destructing themself with the Crylink/ #crylink
-#$line =~ /\^1(.+?)\^1 could not remember where they put plasma/ #electro
-#$line =~ /\^1(.+?)\^1 played with plasma/ #electro
-#$line =~ /\^1(.+?)\^1 forgot about some firemine/ #fireball
-#$line =~ /\^1(.+?)\^1 should have used a smaller gun/ #fireball
-#$line =~ /\^1(.+?)\^1 tried out his own grenade/ #grenade
-#$line =~ /\^1(.+?)\^1 detonated/ #grenade
-#$line =~ /\^1(.+?)\^1 played with tiny rockets/ #hagar
-#$line =~ /\^1(.+?)\^1 should have used a smaller gun/ #hlac
-#$line =~ /\^1(.+?)\^1 did the impossible/ #hook
-#$line =~ /\^1(.+?)\^1 lasered themself to hell/ #laser
-#$line =~ /\^1(.+?)\^1 exploded/ #minelayer
-#$line =~ /\^1(.+?)\^1 did the impossible/ #minstanex
-#$line =~ /\^1(.+?)\^1 did the impossible/ #nex
-#$line =~ /\^1(.+?)\^1 exploded/ # rocket launcher
-#$line =~ /\^1(.+?)\^1 played with tiny rockets/ #tag seeker
-#$line =~ /\^1(.+?)\^1 did the impossible/ #shotgun
-#$line =~ /\^1(.+?)\^1 shot themself automatically/ #sniper
-#$line =~ /\^1(.+?)\^1 sniped themself somehow/ #sniper
-#$line =~ /\^1(.+?)\^1 did the impossible/ #Machine Gun
-#	}
 	elsif (
 		$line =~ /\^1(.+?)\^1 burned to death/ ||
 		$line =~ /\^1(.+?)\^1 could not remember where (?:they|he) put plasma/ || #electro
 		$line =~ /\^1(.+?)\^1 couldn't resist the urge to self-destruct/ ||
+		$line =~ /\^1(.+?)\^1 couldn't take it anymore/ ||
 		$line =~ /\^1(.+?)\^1 detonated/ || #mortar
 		$line =~ /\^1(.+?)\^1 did the impossible/ || #minstanex || nex || shotgun || uzi/machinegun
+		$line =~ /\^1(.+?)\^1 died/ ||
 		$line =~ /\^1(.+?)\^1 exploded/ || #rocket launcher
 		$line =~ /\^1(.+?)\^1 forgot about some firemine/ || #fireball
 		$line =~ /\^1(.+?)\^1 hurt his own ears/ || #tuba
 		$line =~ /\^1(.+?)\^1 lasered themself to hell/ ||
 		$line =~ /\^1(.+?)\^1 played with plasma/ || #electro
 		$line =~ /\^1(.+?)\^1 played with tiny rockets/ || #hagar, flac
-		$line =~ /\^1(.+?)\^1 shot himself automatically/ || #rifle
+		$line =~ /\^1(.+?)\^1 shot (?:them|him)self automatically/ || #rifle
 		$line =~ /\^1(.+?)\^1 should have used a smaller gun/ || #fireball || hlac
-		$line =~ /\^1(.+?)\^1 sniped himself somehow/ || #rifle
+		$line =~ /\^1(.+?)\^1 sniped (?:them|him)self somehow/ || #rifle
 		$line =~ /\^1(.+?)\^1 succeeded at self-destructing (?:them|him)self with the Crylink/ || #crylink
 		$line =~ /\^1(.+?)\^1 tried out his own grenade/ || #mortar
-		$line =~ /\^1(.+?)\^1 unfairly eliminated himself/ ||
+		$line =~ /\^1(.+?)\^1 unfairly eliminated (?:them|him)self/ ||
 		$line =~ /\^1(.+?)\^1 will be reinserted into the game due to his own actions/ 
 	) {
-		logWeaponSuicide($1, 'NotYetImplemented');
+		logWeaponSuicide($1);
 	}
 	# log other deaths.  Most of these are defined inside custom maps
 	elsif (
@@ -501,9 +482,10 @@ sub logPlayerKill($$$;$) {
 # Param $weapon: Name of weapon used for kill
 # Returns: Nothing
 ###############################################################################
-sub logWeaponSuicide($$) {
+sub logWeaponSuicide($) {
 	my $player = getName(shift);
-	my $weapon = getName(shift, 0);
+	#my $weapon = getName(shift, 0);
+	my $weapon = getWeaponName($player, "Unknown Weapon");
 
 	$players{$player}{'allWeaponSuicides'}++;
 	$players{$player}{'weaponSuicides'}{$weapon}++;
