@@ -21,6 +21,7 @@ sub getStatHash();
 sub calcAggregateData();
 sub getName($;$);
 sub parseArgs();
+sub sortNames($$);
 sub slurpFile($);
 sub usage(;$);
 
@@ -802,6 +803,29 @@ sub parseArgs() {
 	usage("'$outFile' must end in .html") if ($outFile !~ /\.html$/);
 	usage("'".dirname($outFile)."' is not a directory or is not writable") if (! -d dirname($outFile) || ! -w dirname($outFile));
 	usage("'$outFile' exists, but is not writable") if ( -e $outFile && ! -w $outFile);
+}
+
+
+sub sortNames($$) {
+	my $a = shift;
+	my $b = shift;
+	my @ourNames = {'Bmor', 'MidnightReaper', 'Zach', 'Zach2', 'Zach3', 'zach', 'zach2', 'zach3'};
+
+	my $aMatch = grep {$_ eq $a} @ourNames;
+	my $bMatch = grep {$_ eq $b} @ourNames;
+
+	if ($aMatch && $bMatch) {
+		return $a cmp $b;
+	}
+	elsif ($aMatch && !$bMatch) {
+		return 1;
+	}
+	elsif (!$aMatch && $bMatch) {
+		return -1;
+	}
+	else {
+		return $a cmp $b;
+	}
 }
 
 
