@@ -6,7 +6,6 @@ use POSIX;
 use File::Basename;
 use Data::Dumper;
 use Getopt::Long qw(:config gnu_getopt require_order no_auto_abbrev);
-use Tie::Gzip;
 
 # Function prototypes
 sub main();
@@ -43,7 +42,15 @@ sub main() {
 
 	open(OUT, ">$outFile") or die ("Cant open $outFile: $!\n");
 
-	open(LOGFILE, "<$logFile") or die("Cant open $logFile: $!\n");
+	my $fileType = `/usr/bin/file -bi $logFile`;
+	if ($fileType =~ /application\/x-gzip; charset=binary/) {
+		print "gzip input file\n";
+		open(LOGFILE, "/bin/zcat $logFile |") or die("Cant open $logFile as gzip: $!\n");
+	}
+	else {
+		print "text input file\n";
+		open(LOGFILE, "<$logFile") or die("Cant open $logFile: $!\n");
+	}
 	my $line;
 	while (($line = <LOGFILE>)) {
 		processLine($line);
@@ -54,6 +61,8 @@ sub main() {
 	output();
 
 	print "ok\n";
+
+	exit(0);
 }
 
 
@@ -792,7 +801,7 @@ sub parseArgs() {
 	$outFile = $ARGV[1] // $defaultOutFile;
 	usage("'$outFile' must end in .html") if ($outFile !~ /\.html$/);
 	usage("'".dirname($outFile)."' is not a directory or is not writable") if (! -d dirname($outFile) || ! -w dirname($outFile));
-	usage("'$outFile' exists and is not writable") if ( -e $outFile && ! -w $outFile);
+	usage("'$outFile' exists, but is not writable") if ( -e $outFile && ! -w $outFile);
 }
 
 
