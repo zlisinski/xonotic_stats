@@ -6,6 +6,7 @@ use POSIX;
 use File::Basename;
 use Data::Dumper;
 use Getopt::Long qw(:config gnu_getopt require_order no_auto_abbrev);
+use Tie::Gzip;
 
 # Function prototypes
 sub main();
@@ -90,10 +91,16 @@ sub processLine($) {
 	elsif ($line =~ /\^1(.+?)\^1 was shot into space by ([^']+)/) {
 		logPlayerKill($1, $2, 'Sky', 1);
 	}
+	# Crushed
+	elsif ($line =~ /\^1(.+?)\^1 was crushed by ([^']+)/) {
+		logPlayerKill($1, $2, 'Crushed', 1);
+	}
+	# Swamp
+	elsif ($line =~ /\^1(.+?)\^1 was conserved by ([^']+)/) {
+		logPlayerKill($1, $2, 'Swamp', 1);
+	}
 	# Generic
-	elsif ($line =~ /\^1(.+?)\^1 was conserved by ([^']+)/ ||
-	       $line =~ /\^1(.+?)\^1 was crushed by ([^']+)/ ||
-	       $line =~ /\^1(.+?)\^1 got shredded by ([^']+)/ ||
+	elsif ($line =~ /\^1(.+?)\^1 got shredded by ([^']+)/ ||
 	       $line =~ /\^1(.+?)\^1 was blasted to bits by ([^']+)/ ||
 	       $line =~ /\^1(.+?)\^1 got caught in the destruction of ([^']+)/ ||
 	       $line =~ /\^1(.+?)\^1 was bolted down by ([^']+)/ ||
@@ -275,7 +282,7 @@ sub processLine($) {
 		$line =~ /\^1(.+?)\^1 couldn't take it anymore/ ||
 		$line =~ /\^1(.+?)\^1 detonated/ || #mortar
 		$line =~ /\^1(.+?)\^1 did the impossible/ || #minstanex || nex || shotgun || uzi/machinegun
-		$line =~ /\^1(.+?)\^1 died/ ||
+		$line =~ /\^1(.+?)\^1 died/ || #generic
 		$line =~ /\^1(.+?)\^1 exploded/ || #rocket launcher
 		$line =~ /\^1(.+?)\^1 forgot about some firemine/ || #fireball
 		$line =~ /\^1(.+?)\^1 hurt his own ears/ || #tuba
@@ -286,6 +293,7 @@ sub processLine($) {
 		$line =~ /\^1(.+?)\^1 should have used a smaller gun/ || #fireball || hlac
 		$line =~ /\^1(.+?)\^1 sniped (?:them|him)self somehow/ || #rifle
 		$line =~ /\^1(.+?)\^1 succeeded at self-destructing (?:them|him)self with the Crylink/ || #crylink
+		$line =~ /\^1(.+?)\^1 thought they found a nice camping ground/ || #camping
 		$line =~ /\^1(.+?)\^1 tried out his own grenade/ || #mortar
 		$line =~ /\^1(.+?)\^1 unfairly eliminated (?:them|him)self/ ||
 		$line =~ /\^1(.+?)\^1 will be reinserted into the game due to his own actions/ 
@@ -386,6 +394,7 @@ sub processLine($) {
 				$players{$player}{'highestKills'} = $players{$player}{'tempHighestKills'};
 			}
 			$players{$player}{'tempHighestKills'} = 0;
+			$players{$player}{'curWeapon'} = '';
 		}
 	}
 	# clear tempHighestKills when players (dis)connect
@@ -395,6 +404,7 @@ sub processLine($) {
 			$players{$player}{'highestKills'} = $players{$player}{'tempHighestKills'};
 		}
 		$players{$player}{'tempHighestKills'} = 0;
+		$players{$player}{'curWeapon'} = '';
 	}
 	# log weapon assignments
 	elsif ($line =~ /^\^7(.+?)\^7 was assigned the \^3(.+?)$/) {
@@ -408,10 +418,10 @@ sub processLine($) {
 
 
 ###############################################################################
-# Gets weapon name from $players array or passed var
+# Gets weapon name from $players hash or passed var
 # Param $player: Name of player
-# Param $defaultWeaponName: Name of weapon used for kill
-# Returns: Weapon name based on current player, or defaultWeaponName
+# Param $defaultWeaponName: Name of weapon used for kill, if not defined in $player hash
+# Returns: Weapon name based on current player, or $defaultWeaponName
 ###############################################################################
 sub getWeaponName($$) {
 	my $player = shift;
