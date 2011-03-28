@@ -750,7 +750,7 @@ sub getName($;$) {
     my $name = shift;
     my $init = shift // 1; #$_[0] // 1; #init name by default
 
-    $name =~ s/\^x4BF\^7//g; #Byron's name color
+    $name =~ s/\^x[\da-fA-F]{3}//g; #strip color codes
     $name =~ s/`/&lsquo;/g;
     $name =~ s/&/&amp;/g;
     $name =~ s/'/&apos;/g;
