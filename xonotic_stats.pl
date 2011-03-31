@@ -420,7 +420,7 @@ sub processLine($) {
 		my $player = getName($1);
 		my $weaponName = $2;
 		$weaponName =~ s/Heavy Laser Assault Cannon/HLAC/;
-		$weaponName = getName($weaponName);
+		$weaponName = getName($weaponName, 0);
 		$players{$player}{'curWeapon'} = $weaponName;
 		$players{$player}{'weaponAssignments'}{$weaponName}++;
 	}
