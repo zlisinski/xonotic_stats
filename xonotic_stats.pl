@@ -179,7 +179,7 @@ sub processLine($) {
 	}
 	# Minstanex
 	elsif ($line =~ /\^1(.+?)\^1 has been vaporized by ([^']+)/) {
-			logPlayerKill($1, $2, 'Minstanex');
+			logPlayerKill($1, $2, 'MinstaNex');
 	}
 	# Mortar
 	elsif ($line =~ /\^1(.+?)\^1 didn't see ([^']+)'s grenade/ ||
@@ -420,6 +420,7 @@ sub processLine($) {
 		my $player = getName($1);
 		my $weaponName = $2;
 		$weaponName =~ s/Heavy Laser Assault Cannon/HLAC/;
+		$weaponName = getName($weaponName);
 		$players{$player}{'curWeapon'} = $weaponName;
 		$players{$player}{'weaponAssignments'}{$weaponName}++;
 	}
