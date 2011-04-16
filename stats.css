@@ -29,6 +29,15 @@ a:hover {
 	border-collapse: collapse;
 	background-color: #CFE0CF;
 }
+.TotalStatsDiv .PTypePlayerUs {
+	background-color: #C0E0C0;
+}
+.TotalStatsDiv .PTypePlayerOther {
+	background-color: #CFE0CF;
+}
+.TotalStatsDiv .PTypeBot {
+	background-color: #D7E0D7;
+}
 .TotalStatsDiv table .RowHighlight {
 	background-color: #DDF8DD;
 }

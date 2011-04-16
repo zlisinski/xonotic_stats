@@ -32,6 +32,7 @@ my $scriptDirname = dirname($0);
 my $logFile = "";
 my $outFile = "";
 my %players = ();
+my @ourNames = ('Bmor', 'MidnightReaper', 'Zach', 'Zach2', 'Zach3');
 
 main();
 
@@ -607,9 +608,20 @@ sub outputStatsByPlayer() {
 	$statTable .= "\t\t</tr>\n";
 	$rowId++;
 
-	foreach my $player (sort keys %players) {
+	foreach my $player (sort sortNames keys %players) {
 		my $ri = sprintf("%02i", $rowId);
-		my $playerType = ($player =~ /\[BOT\]/) ? "PTypeBot" : "PTypePlayer";
+		my $playerType;
+
+		if ($player =~ /\[BOT\]/) {
+			$playerType = "PTypeBot";
+		}
+		elsif (grep {lc $player eq lc $_} @ourNames) {
+			$playerType = "PTypePlayerUs";
+		}
+		else {
+			$playerType = "PTypePlayerOther";
+		}
+
 		$statTable .= "\t\t<tr class='Row$ri $playerType'>\n";
 		$colId = 1;
 		foreach my $stat (@colNames) {
@@ -643,7 +655,7 @@ sub outputPlayerStats() {
 	my $tabs = (" " x 4) x 4;
 	my $playerStatTemplate = slurpFile("$scriptDirname/player_stat_template.html");
 
-	foreach my $playerName (sort keys %players) {
+	foreach my $playerName (sort sortNames keys %players) {
 		my %playerData = %{$players{$playerName}};
 
 		my $totalKills = $playerData{'totalKills'};
@@ -670,13 +682,13 @@ sub outputPlayerStats() {
 		my $playerType = ($playerName =~ /\[BOT\]/) ? "PTypeBot" : "PTypePlayer";
 
 		my $playerKills = '';
-		foreach my $otherPlayerName (sort keys %{$playerData{'playersKilled'}}) {
+		foreach my $otherPlayerName (sort sortNames keys %{$playerData{'playersKilled'}}) {
 			my $botFlag = $otherPlayerName =~ /\[BOT\]/ ? 'PTypeBot' : 'PTypePlayer';
 			$playerKills .= "$tabs<tr class='$botFlag'><th><a href='#PlayerStats_$otherPlayerName'>$otherPlayerName</a></th><td>$playerData{'playersKilled'}{$otherPlayerName}</td></tr>\n";
 		}
 
 		my $playerDeaths = '';
-		foreach my $otherPlayerName (sort keys %{$playerData{'killedByPlayers'}}) {
+		foreach my $otherPlayerName (sort sortNames keys %{$playerData{'killedByPlayers'}}) {
 			my $botFlag = $otherPlayerName =~ /\[BOT\]/ ? ' class="PTypeBot"' : '';
 			$playerDeaths .= "$tabs<tr$botFlag><th><a href='#PlayerStats_$otherPlayerName'>$otherPlayerName</a></th><td>$playerData{'killedByPlayers'}{$otherPlayerName}</td></tr>\n";
 		}
@@ -807,21 +819,34 @@ sub parseArgs() {
 }
 
 
+###############################################################################
+# Sorts player names.  Our names come first, then other players, then bots
+###############################################################################
 sub sortNames($$) {
-	my $a = shift;
-	my $b = shift;
-	my @ourNames = {'Bmor', 'MidnightReaper', 'Zach', 'Zach2', 'Zach3', 'zach', 'zach2', 'zach3'};
+	my $a = lc shift;
+	my $b = lc shift;
 
-	my $aMatch = grep {$_ eq $a} @ourNames;
-	my $bMatch = grep {$_ eq $b} @ourNames;
+	my $aUs = grep {$a eq lc $_} @ourNames;
+	my $bUs = grep {$b eq lc $_} @ourNames;
+	my $aBot = ($a =~ /^\[bot\]/);
+	my $bBot = ($b =~ /^\[bot\]/);
 
-	if ($aMatch && $bMatch) {
+	if ($aUs && $bUs) { #Us vs Us
 		return $a cmp $b;
 	}
-	elsif ($aMatch && !$bMatch) {
+	elsif ($aUs && !$bUs) { #Us vs not Us
+		return -1;
+	}
+	elsif (!$aUs && $bUs) { #Not Us vs Us
 		return 1;
 	}
-	elsif (!$aMatch && $bMatch) {
+	elsif (!$aBot && !$bBot) { #Non-bot vs non-bot
+		return $a cmp $b;
+	}
+	elsif ($aBot && !$bBot) { #Bot vs non-bot
+		return 1;
+	}
+	elsif (!$aBot && $bBot) { #Non-bot vs bot
 		return -1;
 	}
 	else {
