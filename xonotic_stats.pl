@@ -17,6 +17,7 @@ sub initPlayer($);
 sub output();
 sub outputStatsByPlayer(); 
 sub outputPlayerStats();
+sub getPlayerClass($);
 sub getStatHash();
 sub calcAggregateData();
 sub getName($;$);
@@ -610,17 +611,7 @@ sub outputStatsByPlayer() {
 
 	foreach my $player (sort sortNames keys %players) {
 		my $ri = sprintf("%02i", $rowId);
-		my $playerType;
-
-		if ($player =~ /\[BOT\]/) {
-			$playerType = "PTypeBot";
-		}
-		elsif (grep {lc $player eq lc $_} @ourNames) {
-			$playerType = "PTypePlayerUs";
-		}
-		else {
-			$playerType = "PTypePlayerOther";
-		}
+		my $playerType = getPlayerClass($player);
 
 		$statTable .= "\t\t<tr class='Row$ri $playerType'>\n";
 		$colId = 1;
@@ -679,18 +670,18 @@ sub outputPlayerStats() {
 		my $totalWins = $playerData{'totalWins'};
 		my $winPercent = $playerData{'WinPercent'};
 
-		my $playerType = ($playerName =~ /\[BOT\]/) ? "PTypeBot" : "PTypePlayer";
+		my $playerType = getPlayerClass($playerName);
 
 		my $playerKills = '';
 		foreach my $otherPlayerName (sort sortNames keys %{$playerData{'playersKilled'}}) {
-			my $botFlag = $otherPlayerName =~ /\[BOT\]/ ? 'PTypeBot' : 'PTypePlayer';
-			$playerKills .= "$tabs<tr class='$botFlag'><th><a href='#PlayerStats_$otherPlayerName'>$otherPlayerName</a></th><td>$playerData{'playersKilled'}{$otherPlayerName}</td></tr>\n";
+			my $playerClass = getPlayerClass($otherPlayerName);
+			$playerKills .= "$tabs<tr class='$playerClass'><th><a href='#PlayerStats_$otherPlayerName'>$otherPlayerName</a></th><td>$playerData{'playersKilled'}{$otherPlayerName}</td></tr>\n";
 		}
 
 		my $playerDeaths = '';
 		foreach my $otherPlayerName (sort sortNames keys %{$playerData{'killedByPlayers'}}) {
-			my $botFlag = $otherPlayerName =~ /\[BOT\]/ ? ' class="PTypeBot"' : '';
-			$playerDeaths .= "$tabs<tr$botFlag><th><a href='#PlayerStats_$otherPlayerName'>$otherPlayerName</a></th><td>$playerData{'killedByPlayers'}{$otherPlayerName}</td></tr>\n";
+			my $playerClass = getPlayerClass($otherPlayerName);
+			$playerDeaths .= "$tabs<tr class='$playerClass'><th><a href='#PlayerStats_$otherPlayerName'>$otherPlayerName</a></th><td>$playerData{'killedByPlayers'}{$otherPlayerName}</td></tr>\n";
 		}
 
 		my $weaponAssignments = '';
@@ -718,6 +709,27 @@ sub outputPlayerStats() {
 	}
 
 	return $playerStats;
+}
+
+###############################################################################
+# Get CSS class name from player name
+# Returns: CSS class name
+###############################################################################
+sub getPlayerClass($) {
+	my $playerName = shift;
+	my $playerType;
+
+	if ($playerName =~ /^\[BOT\]/i) {
+		$playerType = "PTypeBot";
+	}
+	elsif (grep {lc $playerName eq lc $_} @ourNames) {
+		$playerType = "PTypePlayerUs";
+	}
+	else {
+		$playerType = "PTypePlayerOther";
+	}
+
+	return $playerType;
 }
 
 

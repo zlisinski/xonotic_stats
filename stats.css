@@ -30,13 +30,13 @@ a:hover {
 	background-color: #CFE0CF;
 }
 .TotalStatsDiv .PTypePlayerUs {
-	background-color: #C0E0C0;
+	background-color: #B8E0B8;
 }
 .TotalStatsDiv .PTypePlayerOther {
 	background-color: #CFE0CF;
 }
 .TotalStatsDiv .PTypeBot {
-	background-color: #D7E0D7;
+	background-color: #d8E0d8;
 }
 .TotalStatsDiv table .RowHighlight {
 	background-color: #DDF8DD;
@@ -94,6 +94,15 @@ a:hover {
 }
 .PlayerDiv fieldset td {
 	text-align: left;
+}
+.PlayerDiv .PTypePlayerUs {
+	background-color: #B8E0B8;
+}
+.PlayerDiv .PTypePlayerOther {
+	background-color: #CFE0CF;
+}
+.PlayerDiv .PTypeBot {
+	background-color: #d8E0d8;
 }
 .PlayerDiv .Highlight {
 	background-color: #DDF8DD;
