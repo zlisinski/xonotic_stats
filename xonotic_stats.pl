@@ -202,7 +202,8 @@ sub processLine($) {
 	}
 	# TAG Seeker
 	elsif ($line =~ /\^1(.+?)\^1 ran into ([^']+)'s flac/ ||
-           $line =~ /\^1(.+?)\^1 was tagged by ([^']+)/) {
+           $line =~ /\^1(.+?)\^1 was tagged by ([^']+)/ ||
+           $line =~ /\^1(.+?)\^1 was pummeled by ([^']+)/) {
 			logPlayerKill($1, $2, 'T.A.G. Seeker');
 	}
 	# Shotgun
@@ -217,6 +218,9 @@ sub processLine($) {
            $line =~ /\^1(.+?)\^1 got hit in the head by ([^']+)/ ||
            $line =~ /\^1(.+?)\^1 was sniped by ([^']+)/) {
 			logPlayerKill($1, $2, 'Sniper Rifle');
+	}
+	elsif ($line =~ /\^1(.+?)\^1 died of ([^']+)'s great playing on the @!#%'n Tuba/) {
+		logPlayerKill($1, $2, 'Tuba');
 	}
 	elsif (
 		#grenadelauncher: %s almost dodged %s's grenade
@@ -271,7 +275,9 @@ sub processLine($) {
 		#fireball: %s tried to catch %s's firemine
 		$line =~ /\^1(.+?)\^1 tried to catch ([^']+)/ ||
 		#crylink: %s was too close to %s's Crylink
-		$line =~ /\^1(.+?)\^1 was too close to ([^']+)/ || 
+		$line =~ /\^1(.+?)\^1 was too close to ([^']+)/ ||
+		#tuba: %s died of %s's great playing on the @!#%%'n Tuba
+		$line =~ /\^1(.+?)\^1 died of ([^']+)'s great playing on the @!#%'n Tuba/ ||
 		##electro: %s was blasted by %s's blue beam
 		#hagar: %s was pummeled by %s
 		#hlac: %s was cut down by %s
@@ -295,12 +301,12 @@ sub processLine($) {
 		$line =~ /\^1(.+?)\^1 detonated/ || #mortar
 		$line =~ /\^1(.+?)\^1 did the impossible/ || #minstanex || nex || shotgun || uzi/machinegun
 		$line =~ /\^1(.+?)\^1 died/ || #generic
-		$line =~ /\^1(.+?)\^1 exploded/ || #rocket launcher
+		$line =~ /\^1(.+?)\^1 exploded/ || #rocket launcher || minelayer
 		$line =~ /\^1(.+?)\^1 forgot about some firemine/ || #fireball
 		$line =~ /\^1(.+?)\^1 hurt his own ears/ || #tuba
-		$line =~ /\^1(.+?)\^1 lasered themself to hell/ ||
+		$line =~ /\^1(.+?)\^1 lasered themself to hell/ || #laser
 		$line =~ /\^1(.+?)\^1 played with plasma/ || #electro
-		$line =~ /\^1(.+?)\^1 played with tiny rockets/ || #hagar, flac
+		$line =~ /\^1(.+?)\^1 played with tiny rockets/ || #hagar || seeker
 		$line =~ /\^1(.+?)\^1 shot (?:them|him)self automatically/ || #rifle
 		$line =~ /\^1(.+?)\^1 should have used a smaller gun/ || #fireball || hlac
 		$line =~ /\^1(.+?)\^1 sniped (?:them|him)self somehow/ || #rifle
