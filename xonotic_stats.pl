@@ -363,8 +363,18 @@ sub processLine($) {
 	}
 	# log player joins
 	elsif ($line =~ /\^4(.+?)\^4 is playing now/) {
-		my $player = getName($1);
-		$players{$player}{'gamesPlayed'}++;
+		my $player = getName($1, 0); #don't initialize player hash, just get name
+		
+		if (!defined($players{$player})) {
+			# Initialize the player hash, with 1 game played.
+			# if the player name is not defined at this point, it is because the player just joined the game after the 
+			# 	player who is logging
+			getName($player);
+		}
+		else {
+			# This will happen either when a player first joins (after the logging player) or at the start of subsequent rounds
+			$players{$player}{'gamesPlayed'}++;
+		}
 	}
 	# log picking-up of keys
 	elsif ($line =~ /(?:\|\^7)(.+?)\^7 picked up the \^\d([^ ]+?) key/) {
@@ -547,7 +557,7 @@ sub initPlayer($) {
 			'firstKills'=>0,
 			'allWeaponSuicides'=>0,
 			'otherSuicides'=>0,
-			'gamesPlayed'=>0,
+			'gamesPlayed'=>1, #start at 1 because the player could join before the player who is logging
 			'keyPickups'=>0,
 			'keyLosses'=>0,
 			'keyCaptures'=>0,
